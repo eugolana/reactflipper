@@ -11,17 +11,32 @@ const margin = 10;
 const background_color = '#eeeecc'
 
 function Tile(props) {
+  const iterations = 2;
+  const shapes = <RandomShapes
+    x={props.x}
+    y={props .y}
+    width={props.width}
+    height={props.height}
+    iterations={iterations}
+  />
+  // console.log(shapes);
+  // const key = Math.floor(Math.random() * 1000);
   return (
-    <rect 
-      x={props.x} 
-      y={props.y} 
-      width={props.width} 
-      height={props.height} 
-      rx={corner_radius}
-      ry={corner_radius}
-      fill={props.color} 
-      id={"tile_" + props.id}
-      />
+    <g>
+      <rect 
+        x={props.x} 
+        y={props.y} 
+        width={props.width} 
+        height={props.height} 
+        rx={corner_radius}
+        ry={corner_radius}
+        fill={props.color} 
+        id={"tile_" + props.id}
+      >
+      </rect>
+      {shapes}
+    </g>  
+    // {shapes}
   )
 }
 
@@ -73,7 +88,7 @@ class Board extends Component {
             rx={corner_radius} 
             ry={corner_radius}>
           </rect>
-            {tiles}            
+          {tiles}            
         </svg>
       </div>
     )
@@ -94,3 +109,45 @@ class App extends Component {
 }
 
 export default App;
+
+const shapes = [
+  function Circle(props) {
+    let r = props.width / 3 * (0.5 + Math.random())
+    return (
+      <ellipse 
+        cx={props.x + props.width/2}
+        cy={props.y + props.height/2}
+        rx={r}
+        ry={r}
+        fill="#ff66dd"
+      />
+      )
+  },
+
+  function Rectangle(props) {
+    const centerX = props.x + props.width/2;
+    const centerY = props.y + props.height/2;
+    const width = (0.5 + Math.random()) *  ( props.width/2 );
+    const height = (0.5 + Math.random()) * ( props.height/2 );
+    return (
+      <rect
+      x={centerX - width/2}
+      y={centerY - height/2}
+      width={width}
+      height={height}
+      fill="#ddff66"
+      />
+      )
+  }
+]
+
+
+function RandomShapes(props) {
+  if (props.iterations < 1) {
+    return
+  }
+  var shape = shapes[Math.floor(Math.random() * shapes.length)](props);
+  console.log(shape)
+  return shape
+  
+}
