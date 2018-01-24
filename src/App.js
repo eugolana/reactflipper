@@ -6,10 +6,10 @@ const corner_radius = 4;
 
 const tile_margin = 6;
 
-const columns = 8;
-const rows = 3;
+const columns = 12;
+const rows = 4;
 
-const NUMBER_OF_PATTERNS = 4;
+const NUMBER_OF_PATTERNS = 8;
 
 const margin = 10;
 const board_width = window.innerWidth - 20;
