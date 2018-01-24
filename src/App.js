@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
 import './App.css';
+
 
 const corner_radius = 4;
 
@@ -9,15 +9,16 @@ const tile_margin = 6;
 const columns = 12;
 const rows = 4;
 
-const NUMBER_OF_PATTERNS = 8;
+const NUMBER_OF_PATTERNS = 16;
 
 const margin = 10;
 const board_width = window.innerWidth - 20;
 const board_height = 600;
 
-const background_color = '#842'
-const tile_color = '#bbf'
-const tile_highlight_color = '#88b'
+const background_color = '#ccc'
+const tile_color = '#cdf'
+const tile_highlight_color = '#abd'
+const colorchoices = ['C','D','E','F'];
 
 
 
@@ -28,6 +29,9 @@ function Tile(props){
     onMouseOver={props.onHover}
     onMouseLeave={props.onBlur}
     onClick={props.onClick}
+    style={{
+      filter: "url(#distort)"
+    }}
     >
       <rect 
         x={props.x} 
@@ -38,6 +42,11 @@ function Tile(props){
         ry={corner_radius}
         fill={props.color} 
         id={"tile_" + props.id}
+        className="tile"
+        style={{
+          filter: "url(#dropshadow)",
+          cursor: "pointer"
+          }}
       >
       </rect>
       <MyShape     
@@ -54,7 +63,6 @@ function Tile(props){
 class Shape extends Component {
   constructor(props) {
     super(props);
-    console.log(props)
     this.state = {
       centerX: props.x + (props.tile_width / 2) + (props.offset_x? props.offset_x : 0),
       centerY: props.y + (props.tile_height / 2) +(props.offset_y? props.offset_y : 0),
@@ -81,6 +89,10 @@ class Ellipse extends Shape {
         rx={this.state.rx}
         ry={this.state.ry}
         fill={this.state.color}
+        style={{
+          filter: "url(#dropshadow)",
+          cursor: "pointer"
+        }}
       />
     )
   }
@@ -108,6 +120,10 @@ class Rectangle extends Shape {
       fill={this.state.color}
       rx={this.state.corner_radius}
       ry={this.state.corner_radius}
+      style={{
+          filter: "url(#dropshadow)",
+            cursor: "pointer"
+          }}
       />
     )
   }
@@ -116,7 +132,6 @@ class Rectangle extends Shape {
 class Square extends Rectangle {
   constructor(props) {
     super(props);
-    console.log('constructing Square')
     this.state.height = this.state.width = Math.min(this.state.width, this.state.height);
     
   }
@@ -130,7 +145,6 @@ class Board extends Component {
     let tile_width = ((this.width -  margin) / props.columns) - tile_margin;
     let tile_height = ((this.height -  margin) / props.rows) - tile_margin;
     this.cell_count = props.rows * props.columns;
-    console.log('cell count')
     let patterns = Array(this.cell_count / 2).fill(0).map(v => Math.floor(Math.random() * NUMBER_OF_PATTERNS));
     patterns = shuffle(patterns.concat(patterns));
 
@@ -149,7 +163,6 @@ class Board extends Component {
   }
 
   handleClick(id) {
-    console.log('clickered ' + id)
     if (this.state.tileActive[id] || this.state.tileSolved[id]) {
       return;
     }
@@ -167,8 +180,7 @@ class Board extends Component {
           tileActive: tileActive
         });
         var active_patterns = this.state.tilePattern.filter((item,i) => tileActive[i]);
-        if (active_patterns[0] == active_patterns[1]) {
-          console.log('match!')
+        if (active_patterns[0] === active_patterns[1]) {
           const solved = this.state.tileSolved.map((item, i) => (item || tileActive[i]? 1 : 0));
           const newTileActive = Array(this.state.cell_count).fill(0);
           this.setState({
@@ -232,10 +244,41 @@ class Board extends Component {
         );
       }
     }
-    // console.log(tiles)
+
     return (
       <div className="board">
         <svg id="boardSVG">
+
+        <filter id="dropshadow" height="130%">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="0.5"/> 
+          <feOffset dx="0.5" dy="0.5" result="offsetblur"/> 
+          <feComponentTransfer>
+            <feFuncA type="linear" slope="2"/>
+          </feComponentTransfer>
+          <feMerge> 
+            <feMergeNode/> 
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+
+        <filter id="distort">
+          <feTurbulence result="TURBULENCE" baseFrequency="0.99" numOctaves="4" seed="77"  />
+          <feDisplacementMap in="SourceGraphic" in2="TURBULENCE" result="distorted" scale="1" />
+          <feGaussianBlur in="distorted" result="blurred" stdDeviation="0.5"/> 
+          <feTurbulence result="noise" baseFrequency="0.002" numOctaves="12" seed="99" />
+          <feColorMatrix in="noise" result="noisebw" type="saturate" values="0.2" />
+          <feComposite in="noisebw" in2="blurred" operator="in" result="shapedNoise"/>
+          <feBlend in="blurred" in2="shapedNoise" result="noised" mode="multiply"/>
+
+        </filter>
+
+        <filter id="paperEffect">
+          <feMerge> 
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+
+        </filter>
+
           <rect 
             x={margin} 
             y={margin} 
@@ -295,20 +338,6 @@ function makePattern(shape_id, offset_x, offset_y, width_mult, height_mult, colo
 
 
 const gameTiles = Array(NUMBER_OF_PATTERNS).fill(0).map( v => RandomDoubleShapeComp())
-console.log(gameTiles)
-
-
-
-
-function RandomShapeComp() {
-  let shape_id = Math.floor(Math.random() * shapes.length);
-  let offset_x = Math.random()/2 * (Math.random() > 0.5? -1: 1);
-  let offset_y = Math.random()/2 * (Math.random() > 0.5? -1: 1);
-  let width_mult = 0.5 + (Math.pow(Math.random(), 0.5)/2);
-  let height_mult = 0.5 + (Math.pow(Math.random(), 0.5)/2);
-  let color = randomColor();
-  return makePattern(shape_id, offset_x, offset_y, width_mult,height_mult, color);
-}
 
 function RandomDoubleShapeComp() {
   let shape_id = Math.floor(Math.random() * shapes.length);
@@ -316,20 +345,19 @@ function RandomDoubleShapeComp() {
   let offset_y = Math.random()/2 * (Math.random() > 0.5? -1: 1);
   let width_mult = 0.4 + (Math.pow(Math.random(), 0.5)/2);
   let height_mult = 0.4 + (Math.pow(Math.random(), 0.5)/2);
-  let color = randomColor();
+  let color = randomColor(colorchoices);
   let P1 =  makePattern(shape_id, offset_x, offset_y, width_mult,height_mult, color);
   let offset_x2 = Math.random()/2 * (Math.random() > 0.5? -1: 1);
   let offset_y2 = Math.random()/2 * (Math.random() > 0.5? -1: 1);
   let shape_id2 = Math.floor(Math.random() * shapes.length)
   let width_mult2 =  0.2 + (Math.pow(Math.random(), 0.5)/3);
   let height_mult2 =  0.2 + (Math.pow(Math.random(), 0.5)/3);
-  // console.log('MULT!')
-  // console.log(height_mult2)
-  let color2 = randomColor();
+  let color2 = randomColor(colorchoices);
   let P2 =  makePattern(shape_id2, offset_x2, offset_y2, width_mult2,height_mult2, color2);
   return function(props) {
     return (
-      <g opacity={props.opacity}>
+      <g opacity={props.opacity}
+      filter="url(#distort)">
       <P1
         x={props.x}
         y={props.y}
@@ -347,34 +375,11 @@ function RandomDoubleShapeComp() {
   }
 }
 
-
-
-
-
-function RandomShape(props) {
-  let shape_id = Math.floor(Math.random() * shapes.length);
-  let offset_x = Math.random()/2;
-  let offset_y = Math.random()/2;
-  let width_mult = 0.5 + (Math.pow(Math.random(), 0.5)/2);
-  let height_mult = 0.5 + (Math.pow(Math.random(), 0.5)/2);
-  let color = randomColor();
-  const MyWrapper = makePattern(shape_id, offset_x, offset_y, width_mult,height_mult, color);
-  return (
-    <MyWrapper 
-      x={props.x}
-      y={props.y}
-      width={props.width}
-      height={props.height}
-      />
-  )
-}
-
-function randomColor() {
-  const choices = ["4","8","b","e"];
+function randomColor(colorchoices) {
   let color = "#";
-  color += choices[Math.floor(Math.random() * choices.length)]
-  color += choices[Math.floor(Math.random() * choices.length)]
-  color += choices[Math.floor(Math.random() * choices.length)]
+  color += colorchoices[Math.floor(Math.random() * colorchoices.length)]
+  color += colorchoices[Math.floor(Math.random() * colorchoices.length)]
+  color += colorchoices[Math.floor(Math.random() * colorchoices.length)]
   return color
 }
 
