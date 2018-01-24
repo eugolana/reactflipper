@@ -8,8 +8,7 @@ body {
 
 #boardSVG {
 	display: block;
-	width: 100%;
-	height: 620px;
+	height: auto;
 	margin-left: auto;
 	margin-right: auto;
 }

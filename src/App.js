@@ -6,14 +6,14 @@ const corner_radius = 4;
 
 const tile_margin = 6;
 
-const columns = 12;
+const columns = 16;
 const rows = 4;
 
-const NUMBER_OF_PATTERNS = 16;
+const NUMBER_OF_PATTERNS = 24;
 
 const margin = 10;
 const board_width = window.innerWidth - 20;
-const board_height = 600;
+const board_height = window.innerHeight - 20;
 
 const background_color = '#ccc'
 const tile_color = '#cdf'
@@ -247,7 +247,7 @@ class Board extends Component {
 
     return (
       <div className="board">
-        <svg id="boardSVG">
+        <svg id="boardSVG" height={board_height + 20} width={board_width + 20}>
 
         <filter id="dropshadow" height="130%">
           <feGaussianBlur in="SourceAlpha" stdDeviation="0.5"/> 
