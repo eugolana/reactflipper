@@ -2,8 +2,8 @@ import React, { Component } from 'react';
 import './App.css';
 
 // Game parameter globals
-const columns = 3;
-const rows = 2;
+const columns = 12;
+const rows = 3;
 const NUMBER_OF_PATTERNS = Math.floor((rows*columns)/2);
 
 // style globals
@@ -14,6 +14,7 @@ const background_color = '#ccc'
 const tile_color = '#cdf'
 const tile_highlight_color = '#abd'
 const colorchoices = Array(3).fill(['C','D','E','F']);
+const BW = false;
 
 class App extends Component {
   constructor(props) {
@@ -26,6 +27,8 @@ class App extends Component {
       board_height: window.innerHeight - (2 * margin)
     }
   }
+
+
   render() {
     return (
         <Board 
@@ -66,6 +69,25 @@ class Board extends Component {
       tileActive: Array(this.cell_count).fill(0),
       tileHighlight: Array(this.cell_count).fill(0),
       tileSolved: Array(this.cell_count).fill(0)
+    }
+    window.onresize = this.handleResize();
+  }
+  handleResize() {
+    let _this = this;
+    return function() {
+      let width = window.innerWidth - (2 * margin);
+      let height = window.innerHeight - (2 * margin);
+      let tile_width = ((width - margin) / _this.columns)  * 0.9;
+      let tile_margin = tile_width * 0.1;
+      let tile_height = ((height - margin) / _this.rows)  - tile_margin;
+
+      _this.setState({
+        width: width,
+        height: height,
+        tile_width: tile_width,
+        tile_height: tile_height,
+        tile_margin: tile_margin 
+      })
     }
   }
 
@@ -255,6 +277,21 @@ class Shape extends Component {
       color: props.color? props.color : '#888888'
     };
   }
+  componentWillReceiveProps(props) {
+    this.setState({
+      centerX: props.x + (props.tile_width / 2) + (props.offset_x? props.offset_x : 0),
+      centerY: props.y + (props.tile_height / 2) +(props.offset_y? props.offset_y : 0),
+      tile_width: props.tile_width,
+      tile_height: props.tile_height,
+      width: props.width ? props.width : props.tile_width * 0.6,
+      height: props.height ? props.height : props.tile_height * 0.6,
+      color: props.color? props.color : '#888888'
+     });  
+    this.extraProps(props);
+  }
+  extraProps(props){
+    // 
+  }
 }
 
 class Ellipse extends Shape {
@@ -262,6 +299,12 @@ class Ellipse extends Shape {
     super(props);
     this.state.rx = this.state.width / 2;
     this.state.ry = this.state.height / 2
+  }
+  extraProps(props) {
+    this.setState({
+      rx: this.state.width / 2,
+      ry: this.state.height / 2
+    })
   }
   render() {
     return (
@@ -284,6 +327,13 @@ class Circle extends Ellipse {
   constructor(props) {
     super(props);
      this.state.ry = this.state.rx = Math.min(this.state.rx, this.state.ry);
+  }
+  extraProps(props) {
+    let r = Math.min(this.state.width, this.state.height) /2;
+    this.setState({
+      rx: r,
+      ry: r
+    })
   }
 }
 
@@ -317,14 +367,19 @@ class Square extends Rectangle {
     this.state.height = this.state.width = Math.min(this.state.width, this.state.height);
     
   }
+  extraProps(props) {
+    let minSize = Math.min(this.state.width, this.state.height);
+    this.setState({
+      width: minSize,
+      height: minSize
+    })
+  }
 }
 
 function makePattern(shape, offset_x, offset_y, width_mult, height_mult, color){
   return function(props) {
     const ox = (props.width * 0.33 * offset_x);
     const oy = (props.height * 0.33 * offset_y);
-    const width = width_mult * (props.width - ox)  * 0.7;
-    const height = height_mult * ( props.height - oy) * 0.7 ;
     const MyShape = shape;
     return (
       <MyShape
@@ -332,8 +387,8 @@ function makePattern(shape, offset_x, offset_y, width_mult, height_mult, color){
         y={props.y}
         tile_width={props.width}
         tile_height={props.height}
-        width={width}
-        height={height}
+        width={width_mult * (props.width - ox)  * 0.7}
+        height={height_mult * ( props.height - oy) * 0.7}
         offset_x={ox}
         offset_y={oy}
         color={color}
@@ -350,15 +405,15 @@ function RandomDoubleShapeComp(shapes) {
   let offset_y = Math.random()/2 * (Math.random() > 0.5? -1: 1);
   let width_mult = 0.4 + (Math.pow(Math.random(), 0.5)/2);
   let height_mult = 0.4 + (Math.pow(Math.random(), 0.5)/2);
-  let color = randomColor(colorchoices);
+  let color = randomColor(colorchoices, BW);
   let P1 =  makePattern(shape1, offset_x, offset_y, width_mult,height_mult, color);
   let offset_x2 = Math.random()/2 * (Math.random() > 0.5? -1: 1);
   let offset_y2 = Math.random()/2 * (Math.random() > 0.5? -1: 1);
   let shape2 = shapes[Math.floor(Math.random() * shapes.length)];
   let width_mult2 =  0.2 + (Math.pow(Math.random(), 0.5)/3);
   let height_mult2 =  0.2 + (Math.pow(Math.random(), 0.5)/3);
-  let color2 = randomColor(colorchoices);
-  let P2 =  makePattern(shape1, offset_x2, offset_y2, width_mult2,height_mult2, color2);
+  let color2 = randomColor(colorchoices, BW);
+  let P2 =  makePattern(shape2, offset_x2, offset_y2, width_mult2, height_mult2, color2);
   return function(props) {
     return (
       <g opacity={props.opacity}
@@ -380,7 +435,11 @@ function RandomDoubleShapeComp(shapes) {
   }
 }
 
-function randomColor(colorchoices) {
+function randomColor(colorchoices, bw=false) {
+  if (bw) {
+    let brightness = colorchoices[0][Math.floor(Math.random() * colorchoices[0].length)]
+    return `#${brightness}${brightness}${brightness}`
+  }
   let color = "#";
   color += colorchoices[0][Math.floor(Math.random() * colorchoices[0].length)]
   color += colorchoices[1][Math.floor(Math.random() * colorchoices[1].length)]
