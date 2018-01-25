@@ -13,3 +13,24 @@ body {
 	margin-right: auto;
 }
 
+
+.showing {
+	animation: hideshow 0.5s 1;
+}
+
+.slowshow {
+	animation: hideshow 1s ease 1;
+}
+
+@keyframes hideshow {
+  0% { opacity: 0; }
+  25% { opacity: 0.25; }
+  50% { opacity: 0.5; }
+  75% { opacity: 0.75; }
+  100% { opacity: 1.; }
+} 
+
+.hidden {
+	opacity: 0;
+}
+

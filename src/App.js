@@ -2,8 +2,8 @@ import React, { Component } from 'react';
 import './App.css';
 
 // Game parameter globals
-const columns = 12;
-const rows = 3;
+const columns = 4;
+const rows = 2;
 const NUMBER_OF_PATTERNS = Math.floor((rows*columns)/2);
 
 // style globals
@@ -14,17 +14,17 @@ const background_color = '#ccc'
 const tile_color = '#bbb'
 const tile_highlight_color = '#aaa'
 const colorchoices = Array(3).fill(['c', 'd', 'e', 'f']);
-const BW = true;
+const BW = false;
 
 class App extends Component {
   constructor(props) {
     super(props);
     this.rows = rows;
     this.columns = columns;
-    this.margin = 10;
     this.state = {
-      board_width: window.innerWidth - (2 * margin),
-      board_height: window.innerHeight - (2 * margin)
+      board_width: window.innerWidth,
+      board_height: window.innerHeight 
+
     }
   }
 
@@ -35,7 +35,6 @@ class App extends Component {
           columns={columns}
           height={this.state.board_height}
           width={this.state.board_width}
-          margin={this.margin}
         />
     )
   }
@@ -49,9 +48,9 @@ class Board extends Component {
     this.rows = props.rows;
     this.columns = props.columns;
     this.cell_count = props.rows * props.columns;
-    let tile_width = ((props.width - margin) / props.columns)  * 0.9;
+    let tile_width = ((props.width ) / props.columns)  * 0.9;
     let tile_margin = tile_width * 0.1;
-    let tile_height = ((props.height - margin) / props.rows)  - tile_margin;
+    let tile_height = ((props.height - tile_margin ) / props.rows)  - tile_margin;
 
     let shapes = [Ellipse, Square, Circle, Rectangle];
     this.tile_choices = Array(NUMBER_OF_PATTERNS).fill(0).map( v => RandomDoubleShapeComp(shapes))
@@ -75,11 +74,11 @@ class Board extends Component {
     // Called on window.onresize event
     let _this = this;
     return function() {
-      let width = window.innerWidth - (2 * margin);
-      let height = window.innerHeight - (2 * margin);
-      let tile_width = ((width - margin) / _this.columns)  * 0.9;
+      let width = window.innerWidth ;
+      let height = window.innerHeight ;
+      let tile_width = (width / _this.columns)  * 0.9;
       let tile_margin = tile_width * 0.1;
-      let tile_height = ((height - margin) / _this.rows)  - tile_margin;
+      let tile_height = ((height - tile_margin) / _this.rows) - tile_margin;
 
       _this.setState({
         width: width,
@@ -154,7 +153,8 @@ class Board extends Component {
     if (this.state.tileSolved.every( v => v === 1 )) {
       return (
         <g>
-          <text 
+          <text
+          className="slowshow" 
             x="50%"
             y="50%"
             font-size={200 * this.state.width/1500}
@@ -183,14 +183,14 @@ class Board extends Component {
         let id = r * this.columns + c;
         tiles.push(
           <Tile 
-          x={ 2 * margin + c * (this.state.tile_width + this.state.tile_margin) + this.state.tile_margin/2 }
-          y={ 2 * margin + r * (this.state.tile_height + this.state.tile_margin) }
+          x={ this.state.tile_margin + c * (this.state.tile_width + this.state.tile_margin) }
+          y={this.state.tile_margin + r * (this.state.tile_height + this.state.tile_margin) }
           width={ this.state.tile_width }
           height={ this.state.tile_height }
           color={this.state.tileHighlight[id] || this.state.tileActive[id]? tile_color:tile_highlight_color}
           id={id}
           shape={this.tile_choices[this.state.tilePattern[id]]}
-          active={this.state.tileActive[id] || this.state.tileSolved[id]}
+          showing={this.state.tileActive[id] || this.state.tileSolved[id]}
           onClick={()=>this.handleClick(id)}
           onHover={()=>this.handleHover(id)}
           onBlur={()=>this.handleBlur(id)}
@@ -202,11 +202,11 @@ class Board extends Component {
 
     return (
       <div className="board">
-        <svg id="boardSVG" height={this.state.height + 20} width={this.state.width + 20}>
+        <svg id="boardSVG" height={this.state.height} width={this.state.width}>
         <Filters/>
           <rect 
-            x={margin} 
-            y={margin} 
+            x="0" 
+            y="0"
             width={this.state.width} 
             height={this.state.height} 
             fill={background_color} 
@@ -255,7 +255,7 @@ function Tile(props){
         y={props.y}
         width={props.width}
         height={props.height}
-        opacity={props.active}
+        showing={props.showing}
       />
     </g>  
   )
@@ -271,10 +271,14 @@ class Shape extends Component {
       tile_height: props.tile_height,
       width: props.width ? props.width : props.tile_width * 0.6,
       height: props.height ? props.height : props.tile_height * 0.6,
-      color: props.color? props.color : '#888888'
+      color: props.color? props.color : '#888888',
+      showing: props.showing
     };
   }
   componentWillReceiveProps(props) {
+    if (props.showing) {
+      console.log('showing')
+    }
     this.setState({
       centerX: props.x + (props.tile_width / 2) + (props.offset_x? props.offset_x : 0),
       centerY: props.y + (props.tile_height / 2) +(props.offset_y? props.offset_y : 0),
@@ -282,7 +286,8 @@ class Shape extends Component {
       tile_height: props.tile_height,
       width: props.width ? props.width : props.tile_width * 0.6,
       height: props.height ? props.height : props.tile_height * 0.6,
-      color: props.color? props.color : '#888888'
+      color: props.color? props.color : '#888888',
+      showing: props.showing
      });  
     this.extraProps(props);
   }
@@ -306,6 +311,7 @@ class Ellipse extends Shape {
   render() {
     return (
       <ellipse 
+        className={this.state.showing? "showing": "hidden"}
         cx={this.state.centerX}
         cy={this.state.centerY}
         rx={this.state.rx}
@@ -315,7 +321,8 @@ class Ellipse extends Shape {
           filter: "url(#dropshadow)",
           cursor: "pointer"
         }}
-      />
+      >
+      </ellipse>
     )
   }
 }
@@ -326,7 +333,7 @@ class Circle extends Ellipse {
      this.state.ry = this.state.rx = Math.min(this.state.rx, this.state.ry);
   }
   extraProps(props) {
-    let r = Math.min(this.state.width, this.state.height) /2;
+    let r = Math.min(props.width, props.height) /2;
     this.setState({
       rx: r,
       ry: r
@@ -339,9 +346,13 @@ class Rectangle extends Shape {
     super(props);
     this.state.corner_radius = corner_radius;
   }
+  extraProps(props) {
+    // for some subclass reason I think i need to define this..
+  }
   render() {
     return (
       <rect
+      className={this.state.showing? "showing": "hidden"}
       x={this.state.centerX - (this.state.width/2)}
       y={this.state.centerY - (this.state.height/2)}
       width={this.state.width}
@@ -365,7 +376,7 @@ class Square extends Rectangle {
     
   }
   extraProps(props) {
-    let minSize = Math.min(this.state.width, this.state.height);
+    let minSize = Math.min(props.width, props.height);
     this.setState({
       width: minSize,
       height: minSize
@@ -389,6 +400,7 @@ function makePattern(shape, offset_x, offset_y, width_mult, height_mult, color){
         offset_x={ox}
         offset_y={oy}
         color={color}
+        showing={props.showing}
       />
     ) 
   }
@@ -411,19 +423,21 @@ function RandomDoubleShapeComp(shapes) {
   const P2 = makePatternWrapper(shapes);
   return function(props) {
     return (
-      <g opacity={props.opacity}
+      <g 
       filter="url(#distort)">
         <P1
           x={props.x}
           y={props.y}
           width={props.width}
           height={props.height}
+          showing={props.showing}
         />
         <P2
           x={props.x}
           y={props.y}
           width={props.width}
           height={props.height}
+          showing={props.showing}
         />
       </g>
       )
@@ -448,21 +462,13 @@ function Filters(props) {
       </filter>
 
       <filter id="distort">
-        <feTurbulence result="TURBULENCE" baseFrequency="0.5" numOctaves="7" seed="77"  />
-        <feDisplacementMap in="SourceGraphic" in2="TURBULENCE" result="distorted" scale="2" />
         <feTurbulence result="noise" baseFrequency=".002" numOctaves="2" seed="99" />
         <feColorMatrix in="noise" result="noisebw" type="saturate" values="0.3" />
-        <feComposite in="noisebw" in2="distorted" operator="in" result="shapedNoise"/>
-        <feBlend in="distorted" in2="shapedNoise" result="noised" mode="multiply"/>
+        <feComposite in="noisebw" in2="SourceGraphic" operator="in" result="shapedNoise"/>
+        <feBlend in="SourceGraphic" in2="shapedNoise" result="noised" mode="multiply"/>
         <feGaussianBlur in="noised" result="blurred" stdDeviation="0.5"/> 
       </filter>
 
-        <filter id="paperEffect">
-        <feMerge> 
-          <feMergeNode in="SourceGraphic"/>
-        </feMerge>  
-
-      </filter>
       </g> 
         )
 }
