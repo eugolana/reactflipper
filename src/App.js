@@ -8,13 +8,13 @@ const NUMBER_OF_PATTERNS = Math.floor((rows*columns)/2);
 
 // style globals
 const margin = 10;
-const corner_radius = 4;
+const corner_radius = 0;
 
 const background_color = '#ccc'
-const tile_color = '#cdf'
-const tile_highlight_color = '#abd'
-const colorchoices = Array(3).fill(['C','D','E','F']);
-const BW = false;
+const tile_color = '#bbb'
+const tile_highlight_color = '#aaa'
+const colorchoices = Array(3).fill(['c', 'd', 'e', 'f']);
+const BW = true;
 
 class App extends Component {
   constructor(props) {
@@ -116,7 +116,8 @@ class Board extends Component {
             tileSolved: solved,
             tileActive: newTileActive
           })
-
+          console.log('matched');
+          console.log(this.state.tileSolved)
         } 
         break;
       case 2:
@@ -147,6 +148,31 @@ class Board extends Component {
     this.setState({
       tileHighlight: tileHighlight
     })
+  }
+
+  renderWinMessage(){
+    if (this.state.tileSolved.every( v => v === 1 )) {
+      return (
+        <g>
+          <text 
+            x="50%"
+            y="50%"
+            font-size={200 * this.state.width/1500}
+            font-weight="bold"
+            text-anchor="middle"
+            stroke='#444'
+            stroke-width={ 5 * this.state.width/1500}
+            fill='#ccc'
+            stroke-linejoin="round"
+            filter="url(#dropshadow)"
+            >
+            YOU WON!
+          </text>
+        </g>
+      )
+    } else {
+      return
+    }
   }
 
   render() {
@@ -188,6 +214,7 @@ class Board extends Component {
             ry={corner_radius}>
           </rect>
           {tiles}            
+          {this.renderWinMessage()}
         </svg>
       </div>
     )
@@ -268,7 +295,7 @@ class Ellipse extends Shape {
   constructor(props) {
     super(props);
     this.state.rx = this.state.width / 2;
-    this.state.ry = this.state.height / 2
+    this.state.ry = this.state.height / 2;
   }
   extraProps(props) {
     this.setState({
@@ -367,39 +394,37 @@ function makePattern(shape, offset_x, offset_y, width_mult, height_mult, color){
   }
 }
 
-
-
-function RandomDoubleShapeComp(shapes) {
-  let shape1 = shapes[Math.floor(Math.random() * shapes.length)];
+function makePatternWrapper(shapes){
+  let shape = shapes[Math.floor(Math.random() * shapes.length)];
   let offset_x = Math.random()/2 * (Math.random() > 0.5? -1: 1);
   let offset_y = Math.random()/2 * (Math.random() > 0.5? -1: 1);
   let width_mult = 0.4 + (Math.pow(Math.random(), 0.5)/2);
   let height_mult = 0.4 + (Math.pow(Math.random(), 0.5)/2);
   let color = randomColor(colorchoices, BW);
-  let P1 =  makePattern(shape1, offset_x, offset_y, width_mult,height_mult, color);
-  let offset_x2 = Math.random()/2 * (Math.random() > 0.5? -1: 1);
-  let offset_y2 = Math.random()/2 * (Math.random() > 0.5? -1: 1);
-  let shape2 = shapes[Math.floor(Math.random() * shapes.length)];
-  let width_mult2 =  0.2 + (Math.pow(Math.random(), 0.5)/3);
-  let height_mult2 =  0.2 + (Math.pow(Math.random(), 0.5)/3);
-  let color2 = randomColor(colorchoices, BW);
-  let P2 =  makePattern(shape2, offset_x2, offset_y2, width_mult2, height_mult2, color2);
+  return  makePattern(shape, offset_x, offset_y, width_mult,height_mult, color);
+
+}
+
+
+function RandomDoubleShapeComp(shapes) {
+  const P1 = makePatternWrapper(shapes);
+  const P2 = makePatternWrapper(shapes);
   return function(props) {
     return (
       <g opacity={props.opacity}
       filter="url(#distort)">
-      <P1
-        x={props.x}
-        y={props.y}
-        width={props.width}
-        height={props.height}
-      />
-      <P2
-        x={props.x}
-        y={props.y}
-        width={props.width}
-        height={props.height}
-      />
+        <P1
+          x={props.x}
+          y={props.y}
+          width={props.width}
+          height={props.height}
+        />
+        <P2
+          x={props.x}
+          y={props.y}
+          width={props.width}
+          height={props.height}
+        />
       </g>
       )
   }
@@ -430,7 +455,6 @@ function Filters(props) {
         <feComposite in="noisebw" in2="distorted" operator="in" result="shapedNoise"/>
         <feBlend in="distorted" in2="shapedNoise" result="noised" mode="multiply"/>
         <feGaussianBlur in="noised" result="blurred" stdDeviation="0.5"/> 
-
       </filter>
 
         <filter id="paperEffect">
@@ -439,7 +463,7 @@ function Filters(props) {
         </feMerge>  
 
       </filter>
-      </g>
+      </g> 
         )
 }
 
