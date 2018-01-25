@@ -13,7 +13,7 @@ const corner_radius = 4;
 const background_color = '#ccc'
 const tile_color = '#cdf'
 const tile_highlight_color = '#abd'
-const colorchoices = ['C','D','E','F'];
+const colorchoices = Array(3).fill(['C','D','E','F']);
 
 class App extends Component {
   constructor(props) {
@@ -382,9 +382,9 @@ function RandomDoubleShapeComp(shapes) {
 
 function randomColor(colorchoices) {
   let color = "#";
-  color += colorchoices[Math.floor(Math.random() * colorchoices.length)]
-  color += colorchoices[Math.floor(Math.random() * colorchoices.length)]
-  color += colorchoices[Math.floor(Math.random() * colorchoices.length)]
+  color += colorchoices[0][Math.floor(Math.random() * colorchoices[0].length)]
+  color += colorchoices[1][Math.floor(Math.random() * colorchoices[1].length)]
+  color += colorchoices[2][Math.floor(Math.random() * colorchoices[2].length)]
   return color
 }
 
