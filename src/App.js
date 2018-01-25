@@ -1,29 +1,211 @@
 import React, { Component } from 'react';
 import './App.css';
 
+// Game parameter globals
+const columns = 3;
+const rows = 2;
+const NUMBER_OF_PATTERNS = Math.floor((rows*columns)/2);
 
-const corner_radius = 4;
-
-const tile_margin = 6;
-
-const columns = 16;
-const rows = 6;
-
-const NUMBER_OF_PATTERNS = 24;
-
+// style globals
 const margin = 10;
-const board_width = window.innerWidth - 20;
-const board_height = window.innerHeight - 20;
+const corner_radius = 4;
 
 const background_color = '#ccc'
 const tile_color = '#cdf'
 const tile_highlight_color = '#abd'
 const colorchoices = ['C','D','E','F'];
 
+class App extends Component {
+  constructor(props) {
+    super(props);
+    this.rows = rows;
+    this.columns = columns;
+    this.margin = 10;
+    this.state = {
+      board_width: window.innerWidth - (2 * margin),
+      board_height: window.innerHeight - (2 * margin)
+    }
+  }
+  render() {
+    return (
+        <Board 
+          rows={rows}
+          columns={columns}
+          height={this.state.board_height}
+          width={this.state.board_width}
+          margin={this.margin}
+        />
+    )
+  }
+}
+
+export default App;
+
+class Board extends Component {
+  constructor(props) {
+    super(props);
+    this.rows = props.rows;
+    this.columns = props.columns;
+    this.cell_count = props.rows * props.columns;
+    let tile_width = ((props.width - margin) / props.columns)  * 0.9;
+    let tile_margin = tile_width * 0.1;
+    let tile_height = ((props.height - margin) / props.rows)  - tile_margin;
+
+    let shapes = [Ellipse, Square, Circle, Rectangle];
+    this.tile_choices = Array(NUMBER_OF_PATTERNS).fill(0).map( v => RandomDoubleShapeComp(shapes))
+    let patterns = Array(this.cell_count / 2).fill(0).map(v => Math.floor(Math.random() * NUMBER_OF_PATTERNS));
+    patterns = shuffle(patterns.concat(patterns));
+
+    this.state = {
+      width: props.width,
+      height: props.height,
+      tile_width: tile_width,
+      tile_height: tile_height,
+      tile_margin: tile_margin,
+      tilePattern: patterns,
+      tileActive: Array(this.cell_count).fill(0),
+      tileHighlight: Array(this.cell_count).fill(0),
+      tileSolved: Array(this.cell_count).fill(0)
+    }
+  }
+
+  handleClick(id) {
+    if (this.state.tileActive[id] || this.state.tileSolved[id]) {
+      return;
+    }
+    const tileActive = this.state.tileActive.slice();
+    switch (tileActive.filter(v => v>=1).length) {
+      case 0:
+        tileActive[id] = 1;
+        this.setState({
+          tileActive: tileActive
+        });
+        break;
+      case 1:
+        tileActive[id] = 1;
+        this.setState({
+          tileActive: tileActive
+        });
+        var active_patterns = this.state.tilePattern.filter((item,i) => tileActive[i]);
+        if (active_patterns[0] === active_patterns[1]) {
+          const solved = this.state.tileSolved.map((item, i) => (item || tileActive[i]? 1 : 0));
+          const newTileActive = Array(this.state.cell_count).fill(0);
+          this.setState({
+            tileSolved: solved,
+            tileActive: newTileActive
+          })
+
+        } 
+        break;
+      case 2:
+        let newtileActive = Array(this.state.cell_count).fill(0);
+        newtileActive[id] = 1;
+
+        this.setState({
+          tileActive: newtileActive
+        })
+        break;
+      default:
+        return;
+    }
+
+  }
+
+  handleHover(i) {
+    const tileHighlight = this.state.tileHighlight.slice();
+    tileHighlight[i] = true;
+    this.setState({
+      tileHighlight: tileHighlight
+    })
+  }
+
+  handleBlur(i) {
+    const tileHighlight = this.state.tileHighlight.slice();
+    tileHighlight[i] = false;
+    this.setState({
+      tileHighlight: tileHighlight
+    })
+  }
+
+  render() {
+    var tiles = [];
+
+    for (var c = 0; c < this.columns; c++) {
+      for (var r = 0; r < this.rows; r++) {
+        let id = r * this.columns + c;
+        tiles.push(
+          <Tile 
+          x={ 2 * margin + c * (this.state.tile_width + this.state.tile_margin) + this.state.tile_margin/2 }
+          y={ 2 * margin + r * (this.state.tile_height + this.state.tile_margin) }
+          width={ this.state.tile_width }
+          height={ this.state.tile_height }
+          color={this.state.tileHighlight[id] || this.state.tileActive[id]? tile_color:tile_highlight_color}
+          id={id}
+          shape={this.tile_choices[this.state.tilePattern[id]]}
+          active={this.state.tileActive[id] || this.state.tileSolved[id]}
+          onClick={()=>this.handleClick(id)}
+          onHover={()=>this.handleHover(id)}
+          onBlur={()=>this.handleBlur(id)}
+
+          />
+        );
+      }
+    }
+
+    return (
+      <div className="board">
+        <svg id="boardSVG" height={this.state.height + 20} width={this.state.width + 20}>
+
+        <filter id="dropshadow" height="130%">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="1"/> 
+          <feOffset dx="0.5" dy="0.5" result="offsetblur"/> 
+          <feComponentTransfer>
+            <feFuncA type="linear" slope="2"/>
+          </feComponentTransfer>
+          <feMerge> 
+            <feMergeNode/> 
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+
+        <filter id="distort">
+          <feTurbulence result="TURBULENCE" baseFrequency="0.5" numOctaves="7" seed="77"  />
+          <feDisplacementMap in="SourceGraphic" in2="TURBULENCE" result="distorted" scale="2" />
+          <feTurbulence result="noise" baseFrequency=".002" numOctaves="2" seed="99" />
+          <feColorMatrix in="noise" result="noisebw" type="saturate" values="0.3" />
+          <feComposite in="noisebw" in2="distorted" operator="in" result="shapedNoise"/>
+          <feBlend in="distorted" in2="shapedNoise" result="noised" mode="multiply"/>
+          <feGaussianBlur in="noised" result="blurred" stdDeviation="0.5"/> 
+
+        </filter>
+
+        <filter id="paperEffect">
+          <feMerge> 
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+
+        </filter>
+
+          <rect 
+            x={margin} 
+            y={margin} 
+            width={this.state.width} 
+            height={this.state.height} 
+            fill={background_color} 
+            rx={corner_radius} 
+            ry={corner_radius}>
+          </rect>
+          {tiles}            
+        </svg>
+      </div>
+    )
+  }
+}
+
 
 
 function Tile(props){
-  const MyShape = gameTiles[props.shape];
+  const MyShape = props.shape;
   return (
     <g 
     onMouseOver={props.onHover}
@@ -137,188 +319,13 @@ class Square extends Rectangle {
   }
 }
 
-class Board extends Component {
-  constructor(props) {
-    super(props);
-    this.height = props.height;
-    this.width = props.width;
-    let tile_width = ((this.width -  margin) / props.columns) - tile_margin;
-    let tile_height = ((this.height -  margin) / props.rows) - tile_margin;
-    this.cell_count = props.rows * props.columns;
-    let patterns = Array(this.cell_count / 2).fill(0).map(v => Math.floor(Math.random() * NUMBER_OF_PATTERNS));
-    patterns = shuffle(patterns.concat(patterns));
-
-    this.state = {
-      cell_count: this.cell_count,
-      rows: props.rows,
-      columns: props.columns,
-      tile_width: tile_width,
-      tile_height: tile_height,
-      tile_margin: tile_margin,
-      tilePattern: patterns,
-      tileActive: Array(this.cell_count).fill(0),
-      tileHighlight: Array(this.cell_count).fill(0),
-      tileSolved: Array(this.cell_count).fill(0)
-    }
-  }
-
-  handleClick(id) {
-    if (this.state.tileActive[id] || this.state.tileSolved[id]) {
-      return;
-    }
-    const tileActive = this.state.tileActive.slice();
-    switch (tileActive.filter(v => v>=1).length) {
-      case 0:
-        tileActive[id] = 1;
-        this.setState({
-          tileActive: tileActive
-        });
-        break;
-      case 1:
-        tileActive[id] = 1;
-        this.setState({
-          tileActive: tileActive
-        });
-        var active_patterns = this.state.tilePattern.filter((item,i) => tileActive[i]);
-        if (active_patterns[0] === active_patterns[1]) {
-          const solved = this.state.tileSolved.map((item, i) => (item || tileActive[i]? 1 : 0));
-          const newTileActive = Array(this.state.cell_count).fill(0);
-          this.setState({
-            tileSolved: solved,
-            tileActive: newTileActive
-          })
-
-        } 
-        break;
-      case 2:
-        let newtileActive = Array(this.state.cell_count).fill(0);
-        newtileActive[id] = 1;
-
-        this.setState({
-          tileActive: newtileActive
-        })
-        break;
-      default:
-        return;
-    }
-
-  }
-
-  handleHover(i) {
-    const tileHighlight = this.state.tileHighlight.slice();
-    tileHighlight[i] = true;
-    this.setState({
-      tileHighlight: tileHighlight
-    })
-  }
-
-  handleBlur(i) {
-    const tileHighlight = this.state.tileHighlight.slice();
-    tileHighlight[i] = false;
-    this.setState({
-      tileHighlight: tileHighlight
-    })
-  }
-
-  render() {
-    var tiles = [];
-
-    for (var c = 0; c < this.state.columns; c++) {
-      for (var r = 0; r < this.state.rows; r++) {
-        let id = r * this.state.columns + c;
-        tiles.push(
-          <Tile 
-          x={ 2 * margin + c * (this.state.tile_width + this.state.tile_margin) }
-          y={ 2 * margin + r * (this.state.tile_height + this.state.tile_margin) }
-          width={ this.state.tile_width }
-          height={ this.state.tile_height }
-          color={this.state.tileHighlight[id] || this.state.tileActive[id]? tile_color:tile_highlight_color}
-          id={id}
-          shape={this.state.tilePattern[id]}
-          active={this.state.tileActive[id] || this.state.tileSolved[id]}
-          onClick={()=>this.handleClick(id)}
-          onHover={()=>this.handleHover(id)}
-          onBlur={()=>this.handleBlur(id)}
-
-          />
-        );
-      }
-    }
-
-    return (
-      <div className="board">
-        <svg id="boardSVG" height={board_height + 20} width={board_width + 20}>
-
-        <filter id="dropshadow" height="130%">
-          <feGaussianBlur in="SourceAlpha" stdDeviation="1"/> 
-          <feOffset dx="0.5" dy="0.5" result="offsetblur"/> 
-          <feComponentTransfer>
-            <feFuncA type="linear" slope="2"/>
-          </feComponentTransfer>
-          <feMerge> 
-            <feMergeNode/> 
-            <feMergeNode in="SourceGraphic"/>
-          </feMerge>
-        </filter>
-
-        <filter id="distort">
-          <feTurbulence result="TURBULENCE" baseFrequency="0.5" numOctaves="7" seed="77"  />
-          <feDisplacementMap in="SourceGraphic" in2="TURBULENCE" result="distorted" scale="2" />
-          <feTurbulence result="noise" baseFrequency=".002" numOctaves="2" seed="99" />
-          <feColorMatrix in="noise" result="noisebw" type="saturate" values="0.3" />
-          <feComposite in="noisebw" in2="distorted" operator="in" result="shapedNoise"/>
-          <feBlend in="distorted" in2="shapedNoise" result="noised" mode="multiply"/>
-          <feGaussianBlur in="noised" result="blurred" stdDeviation="0.5"/> 
-
-        </filter>
-
-        <filter id="paperEffect">
-          <feMerge> 
-            <feMergeNode in="SourceGraphic"/>
-          </feMerge>
-
-        </filter>
-
-          <rect 
-            x={margin} 
-            y={margin} 
-            width={board_width} 
-            height={board_height} 
-            fill={background_color} 
-            rx={corner_radius} 
-            ry={corner_radius}>
-          </rect>
-          {tiles}            
-        </svg>
-      </div>
-    )
-  }
-}
-
-class App extends Component {
-  render() {
-    return (
-        <Board 
-          rows={rows}
-          columns={columns}
-          height={board_height}
-          width={board_width}
-        />
-    )
-  }
-}
-
-export default App;
-
-const shapes = [Ellipse, Square, Circle, Rectangle];
-
-function makePattern(shape_id, offset_x, offset_y, width_mult, height_mult, color){
+function makePattern(shape, offset_x, offset_y, width_mult, height_mult, color){
   return function(props) {
     const ox = (props.width * 0.33 * offset_x);
     const oy = (props.height * 0.33 * offset_y);
     const width = width_mult * (props.width - ox)  * 0.7;
     const height = height_mult * ( props.height - oy) * 0.7 ;
-    const MyShape = shapes[shape_id];
+    const MyShape = shape;
     return (
       <MyShape
         x={props.x}
@@ -337,23 +344,21 @@ function makePattern(shape_id, offset_x, offset_y, width_mult, height_mult, colo
 
 
 
-const gameTiles = Array(NUMBER_OF_PATTERNS).fill(0).map( v => RandomDoubleShapeComp())
-
-function RandomDoubleShapeComp() {
-  let shape_id = Math.floor(Math.random() * shapes.length);
+function RandomDoubleShapeComp(shapes) {
+  let shape1 = shapes[Math.floor(Math.random() * shapes.length)];
   let offset_x = Math.random()/2 * (Math.random() > 0.5? -1: 1);
   let offset_y = Math.random()/2 * (Math.random() > 0.5? -1: 1);
   let width_mult = 0.4 + (Math.pow(Math.random(), 0.5)/2);
   let height_mult = 0.4 + (Math.pow(Math.random(), 0.5)/2);
   let color = randomColor(colorchoices);
-  let P1 =  makePattern(shape_id, offset_x, offset_y, width_mult,height_mult, color);
+  let P1 =  makePattern(shape1, offset_x, offset_y, width_mult,height_mult, color);
   let offset_x2 = Math.random()/2 * (Math.random() > 0.5? -1: 1);
   let offset_y2 = Math.random()/2 * (Math.random() > 0.5? -1: 1);
-  let shape_id2 = Math.floor(Math.random() * shapes.length)
+  let shape2 = shapes[Math.floor(Math.random() * shapes.length)];
   let width_mult2 =  0.2 + (Math.pow(Math.random(), 0.5)/3);
   let height_mult2 =  0.2 + (Math.pow(Math.random(), 0.5)/3);
   let color2 = randomColor(colorchoices);
-  let P2 =  makePattern(shape_id2, offset_x2, offset_y2, width_mult2,height_mult2, color2);
+  let P2 =  makePattern(shape1, offset_x2, offset_y2, width_mult2,height_mult2, color2);
   return function(props) {
     return (
       <g opacity={props.opacity}
