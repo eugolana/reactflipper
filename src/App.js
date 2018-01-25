@@ -7,7 +7,7 @@ const corner_radius = 4;
 const tile_margin = 6;
 
 const columns = 16;
-const rows = 4;
+const rows = 6;
 
 const NUMBER_OF_PATTERNS = 24;
 
@@ -250,7 +250,7 @@ class Board extends Component {
         <svg id="boardSVG" height={board_height + 20} width={board_width + 20}>
 
         <filter id="dropshadow" height="130%">
-          <feGaussianBlur in="SourceAlpha" stdDeviation="0.5"/> 
+          <feGaussianBlur in="SourceAlpha" stdDeviation="1"/> 
           <feOffset dx="0.5" dy="0.5" result="offsetblur"/> 
           <feComponentTransfer>
             <feFuncA type="linear" slope="2"/>
@@ -262,13 +262,13 @@ class Board extends Component {
         </filter>
 
         <filter id="distort">
-          <feTurbulence result="TURBULENCE" baseFrequency="0.99" numOctaves="4" seed="77"  />
-          <feDisplacementMap in="SourceGraphic" in2="TURBULENCE" result="distorted" scale="1" />
-          <feGaussianBlur in="distorted" result="blurred" stdDeviation="0.5"/> 
-          <feTurbulence result="noise" baseFrequency="0.002" numOctaves="12" seed="99" />
-          <feColorMatrix in="noise" result="noisebw" type="saturate" values="0.2" />
-          <feComposite in="noisebw" in2="blurred" operator="in" result="shapedNoise"/>
-          <feBlend in="blurred" in2="shapedNoise" result="noised" mode="multiply"/>
+          <feTurbulence result="TURBULENCE" baseFrequency="0.5" numOctaves="7" seed="77"  />
+          <feDisplacementMap in="SourceGraphic" in2="TURBULENCE" result="distorted" scale="2" />
+          <feTurbulence result="noise" baseFrequency=".002" numOctaves="2" seed="99" />
+          <feColorMatrix in="noise" result="noisebw" type="saturate" values="0.3" />
+          <feComposite in="noisebw" in2="distorted" operator="in" result="shapedNoise"/>
+          <feBlend in="distorted" in2="shapedNoise" result="noised" mode="multiply"/>
+          <feGaussianBlur in="noised" result="blurred" stdDeviation="0.5"/> 
 
         </filter>
 
