@@ -9,7 +9,7 @@ const NUMBER_OF_PATTERNS = Math.floor((rows*columns));//this is more than will b
 // style globals
 const corner_radius = 2;
 
-const background_color = '#ccc'
+const background_color = '#222'
 const tile_color = '#ddd'
 const tile_highlight_color = '#bbb'
 const colorchoices = Array(3).fill(['c', 'd', 'e', 'f']);
@@ -66,8 +66,8 @@ class Board extends Component {
     this.columns = props.columns;
     this.cell_count = props.rows * props.columns;
     this.reset = props.reset;
-    let tile_width = ((props.width ) / props.columns)  * 0.9;
-    let tile_margin = tile_width * 0.1;
+    let tile_width = ((props.width ) / props.columns)  * 0.95;
+    let tile_margin = ((props.width ) / props.columns) * 0.05;
     let tile_height = ((props.height - tile_margin ) / props.rows)  - tile_margin;
 
     let shapes = [Ellipse, Square, Circle, Rectangle];
@@ -94,9 +94,9 @@ class Board extends Component {
     return function() {
       let width = window.innerWidth ;
       let height = window.innerHeight ;
-      let tile_width = (width / _this.columns)  * 0.9;
-      let tile_margin = tile_width * 0.1;
-      let tile_height = ((height - tile_margin) / _this.rows) - tile_margin;
+      let tile_width = (width / _this.columns)  * 0.95;
+      let tile_margin = (width  / _this.columns) * 0.05;
+      let tile_height = ((height - tile_margin ) / _this.rows)  - tile_margin;
 
       _this.setState({
         width: width,
@@ -452,7 +452,7 @@ function Filters(props) {
   return (
     <g>
       <filter id="dropshadow" height="130%">
-        <feGaussianBlur in="SourceAlpha" stdDeviation="2d"/> 
+        <feGaussianBlur in="SourceAlpha" stdDeviation="2"/> 
         <feOffset dx="0.5" dy="0.5" result="offsetblur"/> 
         <feComponentTransfer>
           <feFuncA type="linear" slope="2"/>
