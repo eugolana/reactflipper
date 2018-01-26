@@ -247,7 +247,7 @@ function Tile(props){
         id={"tile_" + props.id}
         className="tile"
         style={{
-          filter: "url(#dropshadow)",
+          filter: "url(#speckle)",
           cursor: "pointer"
           }}
       >
@@ -426,7 +426,7 @@ function RandomDoubleShapeComp(shapes) {
   return function(props) {
     return (
       <g 
-      filter="url(#distort)">
+      filter="url(#speckle)">
         <P1
           x={props.x}
           y={props.y}
@@ -452,7 +452,7 @@ function Filters(props) {
   return (
     <g>
       <filter id="dropshadow" height="130%">
-        <feGaussianBlur in="SourceAlpha" stdDeviation="1"/> 
+        <feGaussianBlur in="SourceAlpha" stdDeviation="2d"/> 
         <feOffset dx="0.5" dy="0.5" result="offsetblur"/> 
         <feComponentTransfer>
           <feFuncA type="linear" slope="2"/>
@@ -470,6 +470,30 @@ function Filters(props) {
         <feBlend in="SourceGraphic" in2="shapedNoise" result="noised" mode="multiply"/>
         <feGaussianBlur in="noised" result="blurred" stdDeviation="0.5"/> 
       </filter>
+
+          <filter id="displace">
+      <feTurbulence type="turbulence" baseFrequency="0.05" numOctaves="4" result="turbed"/>
+      <feDisplacementMap in="SourceGraphic" in2="turbed" scale="6"
+         xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+    <filter id="speckle">
+      <feTurbulence type="turbulence" baseFrequency="0.05" numOctaves="4" result="turbed"/>
+      <feDisplacementMap in="SourceGraphic" in2="turbed" scale="3"
+         xChannelSelector="R" yChannelSelector="G" result="graphic"/>
+
+
+
+      <feTurbulence type="turbulence" baseFrequency="0.7" numOctaves="4" result="turbed" seed="432"/>
+      <feTurbulence type="turbulence" baseFrequency="0.01" numOctaves="4" result="turbed2" seed="199"/>
+      <feBlend in="turbed" in2="turbed2" mode="multiply" result="turb"/>
+
+      <feColorMatrix in="turb" type="saturate" values="0.01" result="turbedbw"/>
+
+      <feComposite in="turbedbw" in2="graphic" operator="atop" result="shapedTurbedbw"/>
+
+      <feBlend in="graphic" in2="shapedTurbedbw" mode="multiply" />
+
+    </filter>
 
       </g> 
         )
