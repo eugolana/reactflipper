@@ -2,9 +2,9 @@ import React, { Component } from 'react';
 import './App.css';
 
 // Game parameter globals
-const columns = 6;
-const rows = 3;
-const NUMBER_OF_PATTERNS = Math.floor((rows*columns));//this is more than will be used, but it assures leess doubles
+const columns = 10;
+const rows = 4;
+const NUMBER_OF_PATTERNS = Math.floor((rows*columns));//this is more than will be used, but it assures less doubles
 
 // style globals
 const corner_radius = 2;
@@ -15,17 +15,17 @@ const tile_highlight_color = '#bbb'
 const colorchoices = Array(3).fill(['c', 'd', 'e', 'f']);
 const BW = false;
 
-let GAME = 1
-
 class App extends Component {
   constructor(props) {
     super(props);
+    this.checkWidth();
     this.state = {
       board_width: window.innerWidth,
       board_height: window.innerHeight,
       game: 0
     }
-
+  }
+  checkWidth() {
     if (window.innerWidth < window.innerHeight) {
       this.rows = columns;
       this.columns = rows;    
@@ -35,7 +35,7 @@ class App extends Component {
     }
   }
   reset(){
-    console.log('resetting??')
+    this.checkWidth();
     this.setState({
         board_width: window.innerWidth,
         board_height: window.innerHeight,
