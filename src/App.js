@@ -2,39 +2,56 @@ import React, { Component } from 'react';
 import './App.css';
 
 // Game parameter globals
-const columns = 4;
-const rows = 2;
-const NUMBER_OF_PATTERNS = Math.floor((rows*columns)/2);
+const columns = 6;
+const rows = 3;
+const NUMBER_OF_PATTERNS = Math.floor((rows*columns));//this is more than will be used, but it assures leess doubles
 
 // style globals
-const margin = 10;
-const corner_radius = 0;
+const corner_radius = 2;
 
 const background_color = '#ccc'
-const tile_color = '#bbb'
-const tile_highlight_color = '#aaa'
+const tile_color = '#ddd'
+const tile_highlight_color = '#bbb'
 const colorchoices = Array(3).fill(['c', 'd', 'e', 'f']);
 const BW = false;
+
+let GAME = 1
 
 class App extends Component {
   constructor(props) {
     super(props);
-    this.rows = rows;
-    this.columns = columns;
     this.state = {
       board_width: window.innerWidth,
-      board_height: window.innerHeight 
-
+      board_height: window.innerHeight,
+      game: 0
     }
+
+    if (window.innerWidth < window.innerHeight) {
+      this.rows = columns;
+      this.columns = rows;    
+    } else {
+      this.rows = rows;
+      this.columns = columns;
+    }
+  }
+  reset(){
+    console.log('resetting??')
+    this.setState({
+        board_width: window.innerWidth,
+        board_height: window.innerHeight,
+      game: this.state.game + 1
+    })
   }
 
   render() {
     return (
         <Board 
-          rows={rows}
-          columns={columns}
+          key={this.state.game}
+          rows={this.rows}
+          columns={this.columns}
           height={this.state.board_height}
           width={this.state.board_width}
+          reset={()=>this.reset()}
         />
     )
   }
@@ -48,6 +65,7 @@ class Board extends Component {
     this.rows = props.rows;
     this.columns = props.columns;
     this.cell_count = props.rows * props.columns;
+    this.reset = props.reset;
     let tile_width = ((props.width ) / props.columns)  * 0.9;
     let tile_margin = tile_width * 0.1;
     let tile_height = ((props.height - tile_margin ) / props.rows)  - tile_margin;
@@ -152,23 +170,7 @@ class Board extends Component {
   renderWinMessage(){
     if (this.state.tileSolved.every( v => v === 1 )) {
       return (
-        <g>
-          <text
-          className="slowshow" 
-            x="50%"
-            y="50%"
-            font-size={200 * this.state.width/1500}
-            font-weight="bold"
-            text-anchor="middle"
-            stroke='#444'
-            stroke-width={ 5 * this.state.width/1500}
-            fill='#ccc'
-            stroke-linejoin="round"
-            filter="url(#dropshadow)"
-            >
-            YOU WON!
-          </text>
-        </g>
+        <Win width={this.state.width} height={this.state.height} reset={this.reset}/>
       )
     } else {
       return
@@ -471,6 +473,69 @@ function Filters(props) {
 
       </g> 
         )
+}
+
+function Win(props){
+  return (
+    <g>
+      <text
+      className="slowshow" 
+        x="50%"
+        y="50%"
+        font-size={200 * props.width/1500}
+        font-weight="bold"
+        text-anchor="middle"
+        stroke='#866'
+        stroke-width={ 5 * props.width/1500}
+        fill='#ddd'
+        stroke-linejoin="round"
+        filter="url(#distort)"
+        >
+        YOU WON!
+      </text>
+
+      <rect 
+        id="reset"
+        className="slowshow"
+        x="30%"
+        y="70%"
+        rx={corner_radius}
+        ry={corner_radius}
+        width="40%"
+        height="20%"
+        fill="#ddd"
+        stroke="#866"
+        stroke-width={7 * props.width/1500}
+        stroke-linejoin="round"
+        onClick={props.reset}
+        style={{
+          cursor: "pointer"
+        }}
+        filter="url(#distort)"
+        />
+
+      <text
+        id="resetText"
+        className="slowshow" 
+        x="50%"
+        y="82%"
+        font-size={70 * props.width/1500}
+        font-weight="bolder"
+        text-anchor="middle"
+        stroke='#866'
+        stroke-width={ 5 * props.width/1500}
+        fill='#ddd'
+        stroke-linejoin="round"
+        onClick={props.reset}
+        style={{
+          cursor: "pointer"
+        }}
+        filter="url(#distort)"
+      > 
+        RESET
+      </text>
+    </g>
+  )
 }
 
 function randomColor(colorchoices, bw=false) {

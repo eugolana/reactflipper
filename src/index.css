@@ -15,11 +15,12 @@ body {
 
 
 .showing {
-	animation: hideshow 0.5s 1;
+	animation: hideshow 0.4s 1;
+	pointer-events: none;
 }
 
 .slowshow {
-	animation: hideshow 1s ease 1;
+	animation: slowshow 2s  1;
 }
 
 @keyframes hideshow {
@@ -30,7 +31,34 @@ body {
   100% { opacity: 1.; }
 } 
 
+@keyframes slowshow {
+  0% { opacity: 0; }
+  50% { opacity: 0.; }
+  100% { opacity: 1.; }
+} 
+
 .hidden {
 	opacity: 0;
+	pointer-events: none;
 }
 
+#resetText {
+	pointer-events: none;
+}
+
+#reset:hover {
+	animation: colorThrob 1s ease infinite alternate-reverse;
+}
+
+#reset:hover #resetText {
+	animation: colorThrob 1s ease infinite alternate-reverse;
+}
+
+@keyframes colorThrob {
+  0% { fill: #ddd; }
+  100% { fill: #fff; }
+} 
+
+svg {
+	user-select: none;
+}
